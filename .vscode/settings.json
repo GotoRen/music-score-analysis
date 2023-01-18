@@ -1,0 +1,22 @@
+{
+  "workbench.colorTheme": "Default High Contrast",
+  "workbench.iconTheme": "vscode-icons",
+  "workbench.startupEditor": "none",
+  "workbench.colorCustomizations": {
+    "editorIndentGuide.activeBackground": "#ff00ff",
+    "editorIndentGuide.background": "#708090"
+  },
+  "prettier.tabWidth": 2,
+  "emmet.triggerExpansionOnTab": true,
+  "editor.guides.indentation": true,
+  "npm.exclude": "",
+  "explorer.confirmDelete": false,
+  "vsicons.dontShowNewVersionMessage": true,
+  "editor.detectIndentation": false,
+  "[python]": {
+    "editor.formatOnSave": true
+  },
+  "python.linting.pylintEnabled": true,
+  "python.formatting.provider": "black",
+  "python.linting.pylintArgs": ["--generate-members"]
+}
