@@ -1,20 +1,37 @@
 PYTHON3=python3
 PYLINT=pylint
+PIPENV=pipenv
 
 
 
 # runner
 #===============================================================
+.PHONY: init
+init: pip-sync
+
 .PHONY: run
-run:
+run: ## Run this program.
 	${PYTHON3} main.py
 
 
-# linter
+
+# configure
 #===============================================================
 .PHONY: lint-config-file
-lint-config-file:
+lint-config-file: ## Set pylint configuration file.
 	${PYLINT} --generate-rcfile > .pylintrc
+
+.PHONY: pip-install
+pip-install: ## Configure lockfile based on Pipfile.
+	${PIPENV} install
+
+.PHONY: pip-sync
+pip-sync: ## Set up your local environment based on the lock file.
+	${PIPENV} sync
+
+.PHONY: pip-update
+pip-update: ## Update the package to the latest.
+	${PIPENV} update
 
 
 

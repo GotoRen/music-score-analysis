@@ -6,7 +6,7 @@ WINDOW_NAME_OUTPUT = "output"
 
 path = "img/sample.png"
 img = cv2.imread(path)
-# print(cv2.__version__)
+print(cv2.__version__)
 
 cv2.imshow(WINDOW_NAME_OUTPUT, img)
 cv2.waitKey(0)
