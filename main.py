@@ -1,13 +1,20 @@
-"""This is a main program."""
 import cv2
+from assets.Handlers import FileHandler
+from utils.env import LoadEnv
 
-WINDOW_NAME_INPUT = "input"
-WINDOW_NAME_OUTPUT = "output"
 
-path = "img/sample.png"
-img = cv2.imread(path)
-print(cv2.__version__)
+class Execute:
+    def load_elem(self):
+        return LoadEnv.envload()
 
-cv2.imshow(WINDOW_NAME_OUTPUT, img)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
+    def execute(self):
+        env = self.load_elem()
+        input_img = FileHandler.input_image(env["img_path"])
+        FileHandler.output_image(input_img)
+
+
+if __name__ == "__main__":
+    print("OpenCV version: " + cv2.__version__)
+
+    exec = Execute()
+    exec.execute()

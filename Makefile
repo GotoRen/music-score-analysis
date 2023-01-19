@@ -6,12 +6,13 @@ PIPENV=pipenv
 
 # runner
 #===============================================================
-.PHONY: init
-init: pip-sync
+init: ## Initial configuration of local environment.
+	pre-commit install
+	pip install pipenv
+	pipenv sync
 
-.PHONY: run
 run: ## Run this program.
-	${PYTHON3} main.py
+	@${PYTHON3} main.py
 
 
 
