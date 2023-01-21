@@ -13,7 +13,7 @@ class Execute:
 
         ManipulateImage.calc_img_size(src_img)
 
-        FileHandler.display_halt()
+        FileHandler.disp_halt()
 
 
 if __name__ == "__main__":

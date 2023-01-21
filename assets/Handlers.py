@@ -17,7 +17,7 @@ class FileHandler:
     def save_to_image():
         print("saving image...")
 
-    def display_halt():
+    def disp_halt():
         cv2.waitKey(0)
         cv2.destroyAllWindows()
 
