@@ -6,10 +6,18 @@
 
 Analyze and display the musical scale from the input music score image.
 
+### Requirements
+
+- First, your environment requirements `asdf`.
+
+```
+$ brew install asdf
+```
+
 ### Usage
 
 ```sh
-### Configure your local environment.
+### [Only after clone] Configure your local environment.
 $ make init
 
 ### Run this program.

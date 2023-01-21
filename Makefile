@@ -1,12 +1,13 @@
 PYTHON3=python3
 PYLINT=pylint
 PIPENV=pipenv
-
+SHELL=sh
 
 
 # runner
 #===============================================================
 init: ## Initial configuration of local environment.
+	sh ./bin/scripts/plugin.sh
 	pre-commit install
 	pip install pipenv
 	pipenv sync
