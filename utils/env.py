@@ -10,7 +10,8 @@ class LoadEnv:
         load_dotenv(dotenv_path)
         env = {
             "debug_mode": os.environ.get("DEBUG_MODE"),
-            "img_path": os.environ.get("INPUT_IMAGE_PATH"),
+            "input_img_path": os.environ.get("INPUT_IMAGE_PATH"),
+            "output_img_path": os.environ.get("OUTPUT_IMAGE_PATH"),
         }
 
         return env
