@@ -4,6 +4,9 @@ PIPENV=pipenv
 SHELL=sh
 
 
+
+all: run
+
 # runner
 #===============================================================
 init: ## Initial configuration of local environment.

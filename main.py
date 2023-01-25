@@ -11,7 +11,8 @@ class Execute:
         env = self.load_elem()
         src_img = FileHandler.input_image(env["input_img_path"])
 
-        ManipulateImage.calc_img_size(src_img)
+        ManipulateImage.edge_detection(src_img)
+        # ManipulateImage.five_lines_detection(src_img)
 
         FileHandler.disp_halt()
         FileHandler.save_to_image(env["output_img_path"], src_img)
