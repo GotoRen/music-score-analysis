@@ -70,6 +70,7 @@ class ManipulateImage:
         score_height_base.append(score_height_base[-1]-between_lines_half_length)
         print(score_height_base)
 
+        # 音符がどの線と一番高さが近いかを判定してどの音階か取得
         for note_index, note in enumerate(notes_xy_arr):
             min = 100
             min_index = 0
