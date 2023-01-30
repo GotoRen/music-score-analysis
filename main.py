@@ -1,6 +1,7 @@
 import cv2
-from assets.Handlers import FileHandler, ManipulateImage
+from assets.handlers import FileHandler, ManipulateImage
 from utils.env import LoadEnv
+import sys
 
 
 class Execute:
@@ -19,6 +20,7 @@ class Execute:
 
 
 if __name__ == "__main__":
+    print(sys.executable)
     print("[INFO] OpenCV version: " + cv2.__version__)
 
     exec = Execute()
