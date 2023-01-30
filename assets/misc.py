@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import PIL
 from PIL import Image, ImageDraw, ImageFont
 
 
@@ -9,6 +10,8 @@ class PillowMisc:
         text,
         org,
     ):
+        print("[INFO] PIL version: " + PIL.__version__)
+
         fontFace = (cv2.FONT_HERSHEY_SIMPLEX,)
         fontScale = (10,)
         color = ((255, 0, 0),)
