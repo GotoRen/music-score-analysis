@@ -30,7 +30,7 @@ class ManipulateImage:
         # image size calculation
         height, width, channels = src_img.shape
         img_size = height * width
-        print(img_size)
+        # print(img_size)
 
         # grayscale conversion
         # 白黒画像に変換
@@ -68,7 +68,7 @@ class ManipulateImage:
             score_height_base.append(item-between_lines_half_length)
         # 最後に一番下のドと同じ立ち位置の一番上のラを追加する
         score_height_base.append(score_height_base[-1]-between_lines_half_length)
-        print(score_height_base)
+        # print(score_height_base)
 
         # 音符がどの線と一番高さが近いかを判定してどの音階か取得
         for note_index, note in enumerate(notes_xy_arr):
@@ -126,6 +126,8 @@ class ManipulateImage:
             cx = M["m10"] / M["m00"]
             cy = M["m01"] / M["m00"]
             arr.append([cx,cy])
+        arr.sort(key=lambda x: x[0])
+        # print(arr)
         return arr
 
     # 横線のみを検出してその線のrhoを返す．この場合rhoは実質yと同じとして扱える．（rhoは線と垂直な原点とつなぐ線の長さのため）
@@ -135,7 +137,7 @@ class ManipulateImage:
 
         # 直線の角度がほぼ90°(-85° ~ 95°) のものだけ抽出する。
         lines = list(filter(lambda x: abs(x[1] - np.pi / 2) <= np.deg2rad(5), lines))
-        print(lines)
+        # print(lines)
 
         # 直線を描画する。
         def draw_line(img, theta, rho):
