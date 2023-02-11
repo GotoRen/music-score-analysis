@@ -20,7 +20,7 @@ class Execute:
         FileHandler.disp_image(WINDOW_NAME_OUTPUT, result_img)
 
         ### 保存
-        FileHandler.save_to_image(env["output_img_path"], input_img)
+        FileHandler.save_to_image(env["output_img_path"], result_img)
 
         ### 停止
         FileHandler.disp_halt()
