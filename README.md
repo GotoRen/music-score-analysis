@@ -7,13 +7,9 @@
 
 Analyze and display the musical scale from the input music score image.
 
-### Requirements
-
-- First, your environment requirements `asdf`.
-
-```sh
-$ brew install asdf
-```
+- 五線譜を Hough 変換と角度限定で検出
+- 音符を膨張収縮処理で検出
+- 音符の重心座標と五線譜の位置関係で音階を推定
 
 ### Usage
 
