@@ -1,19 +1,28 @@
 import cv2
 import numpy as np
 import math
-from utils.env import LoadEnv
+import sys
 from distutils.util import strtobool
-from PIL import Image, ImageDraw, ImageFont
 from pathlib import Path
+from utils.env import LoadEnv
+from assets.misc import PillowMisc
+
 
 WINDOW_NAME_DEBUG = "debug"
 
 env = LoadEnv.envload()
 
+score_list = ["ド", "レ", "ミ", "ファ", "ソ", "ラ", "シ"]
+
 
 class FileHandler:
     def input_image(src_path):
-        return cv2.imread(src_path, cv2.IMREAD_COLOR)
+        input_img = cv2.imread(src_path, cv2.IMREAD_COLOR)
+        if input_img is not None:
+            return input_img
+        else:
+            sys.stderr.write("Input image is empty.\n")
+            sys.exit(1)
 
     def disp_image(window_name, img):
         cv2.imshow(window_name, img)
@@ -30,9 +39,17 @@ class FileHandler:
         cv2.waitKey(0)
         cv2.destroyAllWindows()
 
+    def input_font():
+        font = Path(env["input_font_path"])
+        if font.exists():
+            return str(font)
+        else:
+            sys.stderr.write("Failed to input font.\n")
+            sys.exit(1)
+
 
 class ManipulateImage:
-    def edge_detection(src_img):
+    def notes_detection(src_img):
         put_text_img = src_img.copy()
 
         # 白黒画像に変換
@@ -61,7 +78,6 @@ class ManipulateImage:
 
         FileHandler.debug_image("line_img", src_img)
 
-        score_list = ["ド", "レ", "ミ", "ファ", "ソ", "ラ", "シ"]
         # 線の外のドや線と線の間の音符を検出するためにちょっと加工する
         # 五線譜を下から見るために逆順にする
         score_lines_rho_arr.reverse()
@@ -77,7 +93,6 @@ class ManipulateImage:
             score_height_base.append(item - between_lines_half_length)
         # 最後に一番下のドと同じ立ち位置の一番上のラを追加する
         score_height_base.append(score_height_base[-1] - between_lines_half_length)
-        # print(score_height_base)
 
         # 音符がどの線と一番高さが近いかを判定してどの音階か取得
         for note_index, note in enumerate(notes_xy_arr):
@@ -89,41 +104,11 @@ class ManipulateImage:
                     min = diff
                     min_index = index
             print(f"[DEBUG] {note_index}番目の音符: {score_list[min_index%7]}")
-            p = min_index % 7
-            dx = int(note[0])
-            dy = int(note[1])
-            put_text_img = ManipulateImage.disp_note(put_text_img, (dx, dy), p)
-        # FileHandler.debug_image("put_text_img", put_text_img)
+            put_text_img = ManipulateImage.disp_note(
+                put_text_img, (int(note[0]), int(note[1])), min_index % 7
+            )
 
         return put_text_img
-
-    def disp_note(src_img, shift, note_index):
-        score_list = ["ド", "レ", "ミ", "ファ", "ソ", "ラ", "シ"]
-        shift_x, shift_y = shift
-        # cv2.putText(
-        #     src_img,
-        #     text=score_list[note_index],
-        #     org=(shift_x, shift_y + 50),  # TODO: 入力画像のy軸比によって音符画像のサイズを調整する
-        #     fontFace=cv2.FONT_HERSHEY_SIMPLEX,
-        #     fontScale=1.0,
-        #     color=(0, 0, 255),
-        #     thickness=2,
-        #     lineType=cv2.LINE_8,
-        # )
-
-        p = Path("./fonts/msgothic.ttc")
-        print(p.exists())
-
-        # TODO: 入力画像のy軸比によってテキストサイズを調整する
-        src_img = ManipulateImage.cv2_putText_1(
-            src_img,
-            text=score_list[note_index],
-            org=(shift_x, shift_y + 20),
-            fontFace=str(p),
-            fontScale=35,
-            color=(0, 0, 255),
-        )
-        return src_img
 
     def find_notes(src_img, threshold_img):
         kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
@@ -184,24 +169,17 @@ class ManipulateImage:
 
         return lines_rho_arr
 
-    def pil2cv(imgPIL):
-        imgCV_RGB = np.array(imgPIL, dtype=np.uint8)
-        imgCV_BGR = np.array(imgPIL)[:, :, ::-1]
-        return imgCV_BGR
+    def disp_note(src_img, shift, note_index):
+        shift_x, shift_y = shift
 
-    def cv2pil(imgCV):
-        imgCV_RGB = imgCV[:, :, ::-1]
-        imgPIL = Image.fromarray(imgCV_RGB)
-        return imgPIL
+        # TODO: 入力画像のy軸比によってテキストサイズを調整する
+        src_img = PillowMisc.put_text(
+            src_img,
+            text=score_list[note_index],
+            org=(shift_x, shift_y + 20),
+            fontFace=FileHandler.input_font(),
+            fontScale=35,
+            color=(0, 0, 255),
+        )
 
-    def cv2_putText_1(img, text, org, fontFace, fontScale, color):
-        x, y = org
-        b, g, r = color
-        colorRGB = (r, g, b)
-        imgPIL = ManipulateImage.cv2pil(img)
-        draw = ImageDraw.Draw(imgPIL)  # ImageDraw.text() の xy は右上基準
-        fontPIL = ImageFont.truetype(font=fontFace, size=fontScale)
-        draw.text(xy=(x, y), text=text, fill=colorRGB, font=fontPIL)
-
-        imgCV = ManipulateImage.pil2cv(imgPIL)
-        return imgCV
+        return src_img
