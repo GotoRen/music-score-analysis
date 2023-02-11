@@ -1,19 +1,24 @@
 import cv2
 import numpy as np
 import math
+from utils.env import LoadEnv
+from distutils.util import strtobool
 
-WINDOW_NAME_INPUT = "input"
-WINDOW_NAME_OUTPUT = "output"
+WINDOW_NAME_DEBUG = "debug"
+
+env = LoadEnv.envload()
 
 
 class FileHandler:
     def input_image(src_path):
-        img = cv2.imread(src_path, cv2.IMREAD_COLOR)
-        FileHandler.output_image(WINDOW_NAME_INPUT, img)
-        return img
+        return cv2.imread(src_path, cv2.IMREAD_COLOR)
 
-    def output_image(window_name, img):
+    def disp_image(window_name, img):
         cv2.imshow(window_name, img)
+
+    def debug_image(window_name, img):
+        if strtobool(env["debug_mode"]):
+            cv2.imshow(WINDOW_NAME_DEBUG + ": " + window_name, img)
 
     def save_to_image(dst_path, img):
         print("[INFO] saving image...")
@@ -26,24 +31,21 @@ class FileHandler:
 
 class ManipulateImage:
     def edge_detection(src_img):
+        stash_src_img = src_img.copy()
 
-        # image size calculation
-        height, width, channels = src_img.shape
-        img_size = height * width
-        # print(img_size)
-
-        # grayscale conversion
         # 白黒画像に変換
         gray_img = cv2.cvtColor(src_img, cv2.COLOR_RGB2GRAY)
-        # FileHandler.output_image(WINDOW_NAME_DEBUG, gray_img)
+        FileHandler.debug_image("gray_img", gray_img)
 
-        # 画像処理では白い部分に物がある扱いになるので，音符や五線譜が白くなるように白黒反転
+        # 画像処理では白い部分に物がある扱いになるので, 音符や五線譜が白くなるように白黒反転
         bitwise_gray_img = cv2.bitwise_not(gray_img)
-        FileHandler.output_image("bitwise_gray_img", bitwise_gray_img)
+        FileHandler.debug_image("bitwise_gray_img", bitwise_gray_img)
 
         # 大津の２値化で0か255に変換
-        retval, threshold_img = cv2.threshold(bitwise_gray_img, 240, 255, cv2.THRESH_OTSU)
-        FileHandler.output_image("threshold_img", threshold_img)
+        retval, threshold_img = cv2.threshold(
+            bitwise_gray_img, 240, 255, cv2.THRESH_OTSU
+        )
+        FileHandler.debug_image("threshold_img", threshold_img)
 
         # 各音符のエッジを検出
         contours, hierarchy = ManipulateImage.find_notes(src_img, threshold_img)
@@ -51,23 +53,28 @@ class ManipulateImage:
         notes_xy_arr = ManipulateImage.get_scores_xy_array(contours)
 
         # 五線譜の線の高さの配列を取得
-        score_lines_rho_arr = ManipulateImage.get_score_lines_rho_array(src_img, threshold_img)
+        score_lines_rho_arr = ManipulateImage.get_score_lines_rho_array(
+            src_img, threshold_img
+        )
 
-        score_list= ["ド", "レ", "ミ", "ファ", "ソ", "ラ", "シ"]
+        FileHandler.debug_image("line_img", src_img)
+
+        score_list = ["ド", "レ", "ミ", "ファ", "ソ", "ラ", "シ"]
         # 線の外のドや線と線の間の音符を検出するためにちょっと加工する
         # 五線譜を下から見るために逆順にする
         score_lines_rho_arr.reverse()
-        between_lines_length = abs(score_lines_rho_arr[0]-score_lines_rho_arr[1])
-        between_lines_half_length = math.floor(between_lines_length/2)
-        score_lines_rho_arr.insert(0, score_lines_rho_arr[0]+between_lines_length)
-        # 上のコードの時点で配列に「ドミソシレファ」に当たる高さが入っている．間が足りないので埋める．
-        # 方法は線と線の間の長さの半分を各要素に足した値を間に入れる(下から見ていってるからほんとは引く必要があった．)
+        between_lines_length = abs(score_lines_rho_arr[0] - score_lines_rho_arr[1])
+        between_lines_half_length = math.floor(between_lines_length / 2)
+        score_lines_rho_arr.insert(0, score_lines_rho_arr[0] + between_lines_length)
+        # 上のコードの時点で配列に「ドミソシレファ」に当たる高さが入っている
+        # 間が足りないので埋める
+        # 方法は線と線の間の長さの半分を各要素に足した値を間に入れる(下から見ていってるからほんとは引く必要があった)
         score_height_base = []
         for item in score_lines_rho_arr:
             score_height_base.append(item)
-            score_height_base.append(item-between_lines_half_length)
+            score_height_base.append(item - between_lines_half_length)
         # 最後に一番下のドと同じ立ち位置の一番上のラを追加する
-        score_height_base.append(score_height_base[-1]-between_lines_half_length)
+        score_height_base.append(score_height_base[-1] - between_lines_half_length)
         # print(score_height_base)
 
         # 音符がどの線と一番高さが近いかを判定してどの音階か取得
@@ -79,74 +86,62 @@ class ManipulateImage:
                 if diff < min:
                     min = diff
                     min_index = index
-            print(f'{note_index}番目の音符は, {score_list[min_index%7]}')
+            print(f"[DEBUG] {note_index}番目の音符: {score_list[min_index%7]}")
+            # print("min_index", min_index % 7)
+            p = min_index % 7
+            dx = int(note[0])
+            dy = int(note[1])
+            ManipulateImage.disp_note(stash_src_img, (dx, dy), p)
 
-
-
-
-        # # retval, dst = cv2.threshold(gray_img, 190, 255, cv2.THRESH_TOZERO_INV)
-        # dst = cv2.bitwise_not(dst)
-        # retval, dst = cv2.threshold(dst, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
-        # # ManipulateImage.circle_detection(src_img, dst)
-
-        # # 輪郭抽出
-        # cnt, hierarchy = cv2.findContours(dst, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-        # # FileHandler.output_image("detect counter", dst)
-
-        # # 抽出領域出力
-        # dst = cv2.drawContours(dst, cnt, -1, (255, 255, 255, 255), 2, cv2.LINE_AA)
-        # # FileHandler.output_image("score", dst)
-
-        # # kernel = np.ones((5,5),np.uint8)
-        # # dst = cv2.morphologyEx(dst, cv2.MORPH_OPEN, kernel, iterations=12)
-        # # dst = cv2.erode(dst,kernel,iterations = 2)
-        # # FileHandler.output_image("bouchou", dst)
-
-        # # ManipulateImage.circle_detection(src_img, dst)
+        return stash_src_img
 
     def find_notes(src_img, threshold_img):
-        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(5,5))
+        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
         dst = cv2.morphologyEx(threshold_img, cv2.MORPH_OPEN, kernel, iterations=4)
 
-        FileHandler.output_image("dst", dst)
+        FileHandler.debug_image("find_notes_img", dst)
 
-        contours, hierarchy = cv2.findContours(dst, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        contours, hierarchy = cv2.findContours(
+            dst, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+        )
 
         dst = cv2.drawContours(src_img, contours, -1, (0, 255, 0), 2, cv2.LINE_AA)
 
-        FileHandler.output_image("find_notes", dst)
         return contours, hierarchy
 
     def get_scores_xy_array(contours):
         arr = []
         for i, cnt in enumerate(contours):
-            # 輪郭のモーメントを計算する。
+            # 輪郭のモーメントを計算
             M = cv2.moments(cnt)
-            # モーメントから重心を計算する。
+            # モーメントから重心を計算
             cx = M["m10"] / M["m00"]
             cy = M["m01"] / M["m00"]
-            arr.append([cx,cy])
+            arr.append([cx, cy])
         arr.sort(key=lambda x: x[0])
         # print(arr)
         return arr
 
-    # 横線のみを検出してその線のrhoを返す．この場合rhoは実質yと同じとして扱える．（rhoは線と垂直な原点とつなぐ線の長さのため）
+    # 横線のみを検出してその線のrhoを返す
+    # 今回, rhoはyとして扱える (rhoは線と垂直な原点とつなぐ線の長さのため)
     def get_score_lines_rho_array(src_img, threshold_img):
         lines = cv2.HoughLines(threshold_img, 1, np.pi / 180, 300)
         lines = lines.squeeze(axis=1)
 
-        # 直線の角度がほぼ90°(-85° ~ 95°) のものだけ抽出する。
+        # 直線の角度がほぼ90° (-85° ~ 95°) のものだけ抽出する
         lines = list(filter(lambda x: abs(x[1] - np.pi / 2) <= np.deg2rad(5), lines))
         # print(lines)
 
-        # 直線を描画する。
+        # 直線を描画する
         def draw_line(img, theta, rho):
             h, w = img.shape[:2]
             if np.isclose(np.sin(theta), 0):
                 x1, y1 = rho, 0
                 x2, y2 = rho, h
             else:
-                calc_y = lambda x: rho / np.sin(theta) - x * np.cos(theta) / np.sin(theta)
+                calc_y = lambda x: rho / np.sin(theta) - x * np.cos(theta) / np.sin(
+                    theta
+                )
                 x1, y1 = 0, int(calc_y(0))
                 x2, y2 = w, int(calc_y(w))
 
@@ -157,39 +152,26 @@ class ManipulateImage:
             draw_line(src_img, theta, rho)
             lines_rho_arr.append(rho)
 
-        FileHandler.output_image("line_img", src_img)
-
         return lines_rho_arr
 
-
-
-    # def circle_detection(src_img, gray_img):
-    #     circles = cv2.HoughCircles(
-    #         gray_img,
-    #         cv2.HOUGH_GRADIENT,
-    #         dp=1.5,
-    #         minDist=100,
-    #         maxRadius=100,
-    #         param1=100,
-    #         param2=25,
-    #     )
-    #     print(circles)
-    #     for c in circles[0, :]:
-    #         # 円周を描画する
-    #         cv2.circle(
-    #             src_img,
-    #             (int(c[0]), int(c[1])),
-    #             int(c[2]),
-    #             (
-    #                 0,
-    #                 0,
-    #                 165,
-    #             ),
-    #         )
-    #     FileHandler.output_image("detect cirecle", src_img)
-
-    # def five_lines_detection(src_img):
-    #     gray_img = cv2.cvtColor(src_img, cv2.COLOR_RGB2GRAY)
-    #     line_retval, line_dst = cv2.threshold(gray_img, 200, 255, cv2.THRESH_BINARY_INV)
-    #     line_dst = cv2.bitwise_not(line_dst)
-    #     cv2.HoughLinesP()
+    def disp_note(src_img, shift, note_index):
+        score_list = [
+            "C",
+            "D",
+            "E",
+            "F",
+            "G",
+            "A",
+            "B",
+        ]  # ["ド", "レ", "ミ", "ファ", "ソ", "ラ", "シ"]
+        shift_x, shift_y = shift
+        cv2.putText(
+            src_img,
+            text=score_list[note_index],
+            org=(shift_x, shift_y + 80),  # TODO: 入力画像のy軸比によって、音符画像のサイズを調整する
+            fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+            fontScale=1.0,
+            color=(0, 0, 255),
+            thickness=2,
+            lineType=cv2.LINE_8,
+        )
