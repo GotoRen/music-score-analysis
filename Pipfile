@@ -12,6 +12,7 @@ pandas = "*"
 matplotlib = "*"
 requests = "*"
 opencv-python = "*"
+pillow = "*"
 
 [requires]
 python_version = "3.11.0"
