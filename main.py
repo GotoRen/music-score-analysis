@@ -1,5 +1,6 @@
 import cv2
-from assets.Handlers import FileHandler, ManipulateImage
+import PIL
+from assets.handlers import FileHandler, ManipulateImage
 from utils.env import LoadEnv
 
 WINDOW_NAME_INPUT = "input"
@@ -15,7 +16,7 @@ class Execute:
         FileHandler.disp_image(WINDOW_NAME_INPUT, input_img)
 
         ### 処理
-        result_img = ManipulateImage.edge_detection(input_img)
+        result_img = ManipulateImage.notes_detection(input_img)
         FileHandler.disp_image(WINDOW_NAME_OUTPUT, result_img)
 
         ### 保存
@@ -27,6 +28,7 @@ class Execute:
 
 if __name__ == "__main__":
     print("[INFO] OpenCV version: " + cv2.__version__)
+    print("[INFO] PIL version: " + PIL.__version__)
 
     exec = Execute()
     exec.execute()

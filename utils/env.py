@@ -12,6 +12,7 @@ class LoadEnv:
             "debug_mode": os.environ.get("DEBUG_MODE"),
             "input_img_path": os.environ.get("INPUT_IMAGE_PATH"),
             "output_img_path": os.environ.get("OUTPUT_IMAGE_PATH"),
+            "input_font_path": os.environ.get("INPUT_FONT_PATH"),
         }
 
         return env
