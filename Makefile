@@ -16,7 +16,7 @@ init: ## Initial configuration of local environment.
 	pipenv sync
 
 run: ## Run this program.
-	@${PYTHON3} main.py
+	@${PYTHON3} ./analysis.py
 
 
 
